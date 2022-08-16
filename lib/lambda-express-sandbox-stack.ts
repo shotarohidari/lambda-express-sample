@@ -1,16 +1,22 @@
 import * as cdk from 'aws-cdk-lib';
+import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
-
 export class LambdaExpressSandboxStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
+    
+    const lambda = new NodejsFunction(this,"express-sample-handler", {
+      entry: `${__dirname}/../src/handler.ts`
+    });
+    
+    const api = new RestApi(this,"expressApi", {
+      deployOptions: {
+        stageName: "dev",
+        metricsEnabled: true,
+      }
+    });
 
-    // The code that defines your stack goes here
-
-    // example resource
-    // const queue = new sqs.Queue(this, 'LambdaExpressSandboxQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    api.root.addProxy({defaultIntegration: new LambdaIntegration(lambda)});
   }
 }
